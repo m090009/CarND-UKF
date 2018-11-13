@@ -2,6 +2,8 @@
 #include "Eigen/Dense"
 #include <iostream>
 
+#define EPS 0.001
+
 using namespace std;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -25,10 +27,10 @@ UKF::UKF() {
   P_ = MatrixXd(5, 5);
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 0.331;//9 0.231 is the average acceleration of a bicycle
+  std_a_ = 3;//9 0.231 is the average acceleration of a bicycle
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 0.5;//45 degrees is 0.7
+  std_yawdd_ = M_PI / 4;//45 degrees is 0.7
   
   // NONO
   //DO NOT MODIFY measurement noise values below these are provided by the sensor manufacturer.
@@ -63,7 +65,7 @@ UKF::UKF() {
   n_aug_ = 7;
 
   // Lambda (spreading factor)
-  lambda_ = 3 - n_x_;
+  lambda_ = 3 - n_aug_;
 
   // Sigma Weights 
   weights_ = VectorXd(n_aug_ * 2 + 1);
@@ -81,21 +83,21 @@ UKF::UKF() {
   // NIS  laser value
   NIS_laser_ = 0.0;
 
-  NIS_laser_vals.open("../NIS_data/NIS_laser_vals.txt", ios::out);
-  NIS_radar_vals.open("../NIS_data/NIS_radar_vals.txt", ios::out);
+  // NIS_laser_vals.open("../NIS_data/NIS_laser_vals.txt", ios::out);
+  // NIS_radar_vals.open("../NIS_data/NIS_radar_vals.txt", ios::out);
 
-  // Check for errors opening the files
-  if( !NIS_laser_vals.is_open() )
-  {
-    cout << "Error opening NIS_laser_vals.txt file" << endl;
-    exit(1);
-  }
+  // // Check for errors opening the files
+  // if( !NIS_laser_vals.is_open() )
+  // {
+  //   cout << "Error opening NIS_laser_vals.txt file" << endl;
+  //   exit(1);
+  // }
 
-  if( !NIS_radar_vals.is_open() )
-  {
-    cout << "Error opening NIS_radar_vals.txt file" << endl;
-    exit(1);
-  }
+  // if( !NIS_radar_vals.is_open() )
+  // {
+  //   cout << "Error opening NIS_radar_vals.txt file" << endl;
+  //   exit(1);
+  // }
 
 }
 
@@ -120,13 +122,13 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       if (!is_initialized_){
 
       // Init State vector and covariance matrix
-      x_ << 1., 1., 1., 1., 0.1;
-      // P_ = MatrixXd::Identity(n_x_, n_x_);
-      P_ << 0.15,    0, 0, 0, 0,
-               0, 0.15, 0, 0, 0,
-               0,    0, 1, 0, 0,
-               0,    0, 0, 1, 0,
-               0,    0, 0, 0, 1;
+      x_ << .1, .1, 0., 0., 0.0;
+//       P_ = MatrixXd::Identity(n_x_, n_x_);
+      P_ << 1, 0, 0, 0, 0,
+      0, 1, 0, 0, 0,
+      0, 0, 1, 0, 0,
+      0, 0, 0, 1, 0,
+      0, 0, 0, 0, 1;
 
 
       // init timestamp
@@ -142,11 +144,15 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
           /**
           Convert radar from polar to cartesian coordinates and initialize state.
           */
-          float ro = meas_package.raw_measurements_(0);
+          float rho = meas_package.raw_measurements_(0);
           float phi = meas_package.raw_measurements_(1);
-          // float ro_dot = meas_package.raw_measurements_(2);
-          x_(0) = ro * cos(phi);
-          x_(1) = ro * sin(phi);
+          float rho_dot = meas_package.raw_measurements_(2);
+          float vx = rho_dot * cos(phi);
+          float vy = rho_dot * sin(phi);
+          float v  = sqrt(vx * vx + vy * vy);
+          x_(0) = rho * cos(phi);
+          x_(1) = rho * sin(phi);
+          // x_(2) = v;
         }
         // done initializing, no need to predict or update
         is_initialized_ = true;
@@ -219,8 +225,8 @@ MatrixXd UKF::GetAugmentedSigmaPoints(){
   //Augmented covariance matrix
   P_aug.fill(0.0);
   P_aug.topLeftCorner(n_x_, n_x_) = P_;
-  P_aug(n_x_, n_x_) = pow(std_a_, 2);
-  P_aug(n_x_ + 1, n_x_ + 1) = pow(std_yawdd_, 2);
+  P_aug(5, 5) = pow(std_a_, 2);
+  P_aug(6, 6) = pow(std_yawdd_, 2);
 
   //Square root matrix
   MatrixXd L = P_aug.llt().matrixL();
@@ -254,7 +260,7 @@ void UKF::PredictSigmaPoints(double delta_t){
       // State variables pred
       double px_p, py_p;
       // Division by zero check
-      if (fabs(yawd) > 0.001){
+      if (fabs(yawd) > EPS){
           // If greater than Zero
           px_p = p_x + v / yawd * (sin(yaw + yawd * delta_t) - sin(yaw));
           py_p = p_y + v / yawd * (cos(yaw) - cos(yaw + yawd * delta_t));
@@ -433,7 +439,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   NIS_laser_ = z_diff.transpose() * S.inverse() * z_diff;
 
   // cout << "Laser NIS is : "<< NIS_laser_<< endl;
-  NIS_laser_vals << NIS_laser_ << endl;
+  // NIS_laser_vals << NIS_laser_ << endl;
 
 }
 
@@ -463,8 +469,13 @@ void UKF::RadarMeasurement(VectorXd* z_out, MatrixXd* S_out, MatrixXd Zsig_out, 
       
       // measurement model 
       Zsig(0, i) = sqrt(pow(p_x, 2) + pow(p_y, 2));
-      Zsig(1, i) = atan2(p_y, p_x);
-      Zsig(2, i) = (p_x * v1 + p_y * v2) / sqrt(pow(p_x, 2) + pow(p_y, 2));
+      if (fabs(p_x + p_y) < EPS) {
+        Zsig(1, i) = atan2(0.0001, 0.0001);
+      } else {
+        Zsig(1, i) = atan2(p_y, p_x);
+      }
+      Zsig(2,i) = (p_x*v1 + p_y*v2 ) / std::max(EPS, sqrt(p_x*p_x + p_y*p_y));
+//      Zsig(2, i) = (p_x * v1 + p_y * v2) / sqrt(pow(p_x, 2) + pow(p_y, 2));
       
   }
   //calculate mean predicted measurement
@@ -612,6 +623,6 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
   NIS_radar_ = z_diff.transpose() * S.inverse() * z_diff;
   // cout << "Radar NIS is : "<< NIS_radar_<< endl;
-  NIS_radar_vals << NIS_radar_ << endl;
+  // NIS_radar_vals << NIS_radar_ << endl;
 
 }
