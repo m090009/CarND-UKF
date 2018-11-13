@@ -2,13 +2,13 @@
 # Uncented Kalman Filter
 In this Project the aim was to lower our RMSE (Root Mean Squared Error) to get a better estimation of the location of a bicycle using CTRV motion model via the reading we get from both the Laser and Radar sensors.
 
-[![GIF](./imgs/ukf_.gif = 1080x1920)](https://youtu.be/qHsifwlvamc)
+![GIF](./imgs/ukf_.gif)(https://youtu.be/qHsifwlvamc)
 
 ## Tuning the Process Noise
 
 Here I tuned the acceleration and the angular noise variables and monitored the RMSE changes. I started with **0.231** as the initial value for the acceleration noise as it is the average acceleration of a bicycle in urban setting, and for the angle **0.7** which is 45 degrees as a starting point. At first I used **9** which is much better than the 30 that was there before, but its still too high for a bicycle. I tried many variations before I ended up with acceleration **0.331** and angle **0.5** which gave the best RMSE.
 
-![finalRMSE.png](./imgs/finalRMSE.png =1080x1920)
+![finalRMSE.png](./imgs/finalRMSE.png )
 
 
 ## RMSE
