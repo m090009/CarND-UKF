@@ -106,26 +106,21 @@ UKF::UKF() {
   P_aug_(5, 5) = pow(std_a_, 2);
   P_aug_(6, 6) = pow(std_yawdd_, 2);
 
-
-
-
-
-
-  // NIS_laser_vals.open("../NIS_data/NIS_laser_vals.txt", ios::out);
-  // NIS_radar_vals.open("../NIS_data/NIS_radar_vals.txt", ios::out);
-
-  // // Check for errors opening the files
-  // if( !NIS_laser_vals.is_open() )
-  // {
-  //   cout << "Error opening NIS_laser_vals.txt file" << endl;
-  //   exit(1);
-  // }
-
-  // if( !NIS_radar_vals.is_open() )
-  // {
-  //   cout << "Error opening NIS_radar_vals.txt file" << endl;
-  //   exit(1);
-  // }
+//   NIS_laser_vals.open("../NIS_data/NIS_laser_vals.txt", ios::out);
+//   NIS_radar_vals.open("../NIS_data/NIS_radar_vals.txt", ios::out);
+//
+//   // Check for errors opening the files
+//   if( !NIS_laser_vals.is_open() )
+//   {
+//     cout << "Error opening NIS_laser_vals.txt file" << endl;
+//     exit(1);
+//   }
+//
+//   if( !NIS_radar_vals.is_open() )
+//   {
+//     cout << "Error opening NIS_radar_vals.txt file" << endl;
+//     exit(1);
+//   }
 
 }
 
@@ -460,7 +455,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   
 
   // cout << "Laser NIS is : "<< NIS_laser_<< endl;
-  // NIS_laser_vals << NIS_laser_ << endl;
+//   NIS_laser_vals << NIS_laser_ << endl;
 
   //##########################################################
   // EKF implementation
@@ -664,6 +659,6 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
   NIS_radar_ = z_diff.transpose() * S.inverse() * z_diff;
   // cout << "Radar NIS is : "<< NIS_radar_<< endl;
-  // NIS_radar_vals << NIS_radar_ << endl;
+//   NIS_radar_vals << NIS_radar_ << endl;
 
 }
