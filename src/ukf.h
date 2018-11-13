@@ -75,7 +75,10 @@ public:
   std::ofstream NIS_radar_vals;
   std::ofstream NIS_laser_vals;
   
-
+  MatrixXd R_radar_;
+  MatrixXd R_laser_;
+  //create augmented state covariance
+  MatrixXd P_aug_;
 
   /**
    * Constructor
@@ -99,7 +102,7 @@ public:
 
   MatrixXd GetAugmentedSigmaPoints();
 
-  void PredictSigmaPoints(double delta_t);
+  MatrixXd PredictSigmaPoints(double delta_t);
 
   void PredictMeanAndCovariance();
 
