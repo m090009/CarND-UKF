@@ -2,7 +2,7 @@
 # Uncented Kalman Filter
 In this Project the aim was to lower our RMSE (Root Mean Squared Error) to get a better estimation of the location of a bicycle using CTRV motion model via the reading we get from both the Laser and Radar sensors.
 
-![GIF](./imgs/ukf_.gif)(https://youtu.be/qHsifwlvamc)
+[![GIF](./imgs/ukf_.gif)](https://youtu.be/qHsifwlvamc)
 
 ## Tuning the Process Noise
 
